@@ -5,8 +5,9 @@ use std::{
 };
 
 use chrono::{NaiveDate, TimeDelta};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Task {
     pub id: i32,
     pub name: String,
@@ -66,7 +67,7 @@ impl Task {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TaskManager {
     tasks: Vec<Task>,
 }
@@ -84,7 +85,7 @@ impl TaskManager {
         self.tasks.iter().find(|t| t.id == id)
     }
 
-    pub fn print_tasks(&self) {
+    pub fn list_tasks(&self) {
         for i in self.tasks.iter() {
             i.print_task();
         }
