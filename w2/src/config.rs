@@ -4,11 +4,11 @@ use clap::{Parser, Subcommand};
 
 #[derive(Parser, Debug)]
 pub struct Config {
-    #[command()]
-    pub path: Option<PathBuf>,
-
     #[command(subcommand)]
     pub command: Commands,
+
+    #[command()]
+    pub path: Option<PathBuf>,
 }
 
 #[derive(Subcommand, Debug)]

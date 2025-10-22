@@ -1,10 +1,59 @@
-pub mod control {
-    use std::fs::File;
+use std::{
+    fs::File,
+    path::{self, PathBuf},
+};
 
-    use crate::task::TaskManager;
+use crate::task::{TaskManager, create_task_from_console};
 
-    pub fn list() {
-        let tm: TaskManager = serde_json::from_reader(File::open("tasks.json").unwrap()).unwrap();
-        tm.list_tasks();
+pub fn deserialize_json(path: &PathBuf) -> TaskManager {
+    let tm: TaskManager;
+
+    match std::fs::exists(path) {
+        Ok(true) => tm = serde_json::from_reader(File::open(path).unwrap()).unwrap(),
+        Ok(false) => {
+            println!(
+                "Path \"{}\" not found. Creating new TaskManager",
+                path.to_str().unwrap()
+            );
+            tm = TaskManager::new();
+        }
+        Err(e) => {
+            panic!("{}", e)
+        }
     }
+
+    tm
+}
+
+pub fn serialize_json(path: &PathBuf, tm: &TaskManager) {
+    let result = serde_json::to_writer(File::create(path).unwrap(), &tm);
+    match result {
+        Ok(_) => (),
+        Err(e) => println!("{}", e),
+    }
+}
+
+pub fn list(path: &PathBuf) -> TaskManager {
+    let tm = deserialize_json(path);
+    tm.list_tasks();
+    tm
+}
+
+pub fn list_by_id(path: &PathBuf, id: i32) -> TaskManager {
+    let tm = deserialize_json(path);
+    tm.list_task_by_id(id);
+    tm
+}
+
+pub fn add(path: &PathBuf) -> TaskManager {
+    let mut tm = deserialize_json(path);
+    let task = create_task_from_console();
+    tm.add_task(task);
+    tm
+}
+
+pub fn remove_by_id(path: &PathBuf, id: i32) -> TaskManager {
+    let mut tm = deserialize_json(path);
+    tm.remove_task_by_id(id);
+    tm
 }

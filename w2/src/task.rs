@@ -81,7 +81,11 @@ impl TaskManager {
         self.tasks.push(task);
     }
 
-    pub fn get_task_by_id(&self, id: i32) -> Option<&Task> {
+    pub fn remove_task_by_id(&mut self, id: i32) {
+        self.tasks.remove(id as usize);
+    }
+
+    pub fn list_task_by_id(&self, id: i32) -> Option<&Task> {
         self.tasks.iter().find(|t| t.id == id)
     }
 
@@ -195,7 +199,7 @@ fn parse_timedelta(string: &str) -> TimeDelta {
     TimeDelta::days(number.into())
 }
 
-fn create_task_from_console() -> Task {
+pub fn create_task_from_console() -> Task {
     let id = read_number("  ID of Task: ");
     let name = read_string("  Name of Task: ");
     let description = read_string("  Description of Task: ");

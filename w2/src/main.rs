@@ -1,18 +1,20 @@
 use std::{env, path::PathBuf};
 
 use clap::Parser;
-// use std::path::Path;
+use std::path::Path;
 
 mod task;
 use task::TaskManager;
 
 mod config;
+mod control;
+
 use config::Config;
 
-fn main() {
-    let mut tm = TaskManager::new();
-    let mut args = Config::parse();
+use crate::control::{add, list, list_by_id, remove_by_id, serialize_json};
 
+fn main() {
+    let mut args = Config::parse();
     args.path = match args.path {
         Some(val) => Some(val),
         None => {
@@ -24,33 +26,14 @@ fn main() {
         }
     };
 
-    match args.command {
-        config::Commands::List => (),
-        config::Commands::ListById { id } => (),
-        config::Commands::Add => (),
-        config::Commands::RemoveById { id } => (),
-    }
+    let path = args.path.unwrap();
 
-    // tm.read_from_csv(Path::new("tasks.csv"), true);
-    //
-    // println!("\nAll tasks:");
-    // tm.print_tasks();
-    //
-    // println!("\nSorted by planned date:");
-    // tm.sort_by_planned_from();
-    // tm.print_tasks();
-    //
-    // println!("\nSorted by planned duration:");
-    // tm.sort_by_planned_duration();
-    // tm.print_tasks();
-    //
-    // println!("\nSorted by priority:");
-    // tm.sort_by_priority();
-    // tm.print_tasks();
-    //
-    // let serialized_json = serde_json::to_string_pretty(&tm).unwrap();
-    // println!("{}\n", serialized_json);
-    //
-    // let new_task_manager: TaskManager = serde_json::from_str(&serialized_json).unwrap();
-    // new_task_manager.print_tasks();
+    let tm = match args.command {
+        config::Commands::List => list(&path),
+        config::Commands::ListById { id } => list_by_id(&path, id),
+        config::Commands::Add => add(&path),
+        config::Commands::RemoveById { id } => remove_by_id(&path, id),
+    };
+
+    serialize_json(&path, &tm);
 }
