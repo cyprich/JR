@@ -1,16 +1,12 @@
-use std::{env, path::PathBuf};
-
 use clap::Parser;
-use std::path::Path;
+use std::path::PathBuf;
 
 mod task;
-use task::TaskManager;
 
 mod config;
-mod control;
-
 use config::Config;
 
+mod control;
 use crate::control::{add, list, list_by_id, remove_by_id, serialize_json};
 
 fn main() {

@@ -1,7 +1,4 @@
-use std::{
-    fs::File,
-    path::{self, PathBuf},
-};
+use std::{fs::File, path::PathBuf};
 
 use crate::task::{TaskManager, create_task_from_console};
 
