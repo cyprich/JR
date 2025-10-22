@@ -35,7 +35,7 @@ impl Task {
         }
     }
 
-    fn print_task(&self) {
+    pub fn print(&self) {
         let real_from = match self.real_from {
             Some(val) => val.to_string(),
             None => String::from("-"),
@@ -91,7 +91,7 @@ impl TaskManager {
 
     pub fn list_tasks(&self) {
         for i in self.tasks.iter() {
-            i.print_task();
+            i.print();
         }
     }
 
@@ -200,12 +200,12 @@ fn parse_timedelta(string: &str) -> TimeDelta {
 }
 
 pub fn create_task_from_console() -> Task {
-    let id = read_number("  ID of Task: ");
-    let name = read_string("  Name of Task: ");
-    let description = read_string("  Description of Task: ");
-    let priority = read_number("  Priority of Task: ");
-    let planned_from = read_date("  Date from: ");
-    let planned_duration = read_timedelta("  Planned duration: ");
+    let id = read_number("ID of Task: ");
+    let name = read_string("Name of Task: ");
+    let description = read_string("Description of Task: ");
+    let priority = read_number("Priority of Task: ");
+    let planned_from = read_date("Date from (ex. 1.1.2025): ");
+    let planned_duration = read_timedelta("Planned duration (days): ");
     let real_from = None;
     let real_duration = None;
 

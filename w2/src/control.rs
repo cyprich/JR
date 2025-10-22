@@ -41,7 +41,13 @@ pub fn list(path: &PathBuf) -> TaskManager {
 
 pub fn list_by_id(path: &PathBuf, id: i32) -> TaskManager {
     let tm = deserialize_json(path);
-    tm.list_task_by_id(id);
+    let task = tm.list_task_by_id(id);
+
+    match task {
+        Some(val) => val.print(),
+        None => println!("Task with ID {id} not found"),
+    }
+
     tm
 }
 
