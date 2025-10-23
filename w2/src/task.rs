@@ -7,6 +7,8 @@ use std::{
 use chrono::{NaiveDate, TimeDelta};
 use serde::{Deserialize, Serialize};
 
+use crate::config;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Task {
     pub id: i32,
@@ -35,7 +37,7 @@ impl Task {
         }
     }
 
-    pub fn print(&self) {
+    pub fn print(&self, show_header: bool) {
         let real_from = match self.real_from {
             Some(val) => val.to_string(),
             None => String::from("-"),
@@ -51,8 +53,13 @@ impl Task {
             None => String::from("-"),
         };
 
+        let header = "Task ID, Priority, Planned from, Planned to, Real from, Real to, Description";
+        if show_header {
+            println!("{header}")
+        };
+
         println!(
-            "Task #{}: {} \tPriority: {}\tPlanned from: {}, to: {} ({} days)\tReal from: {}, to: {} ({} days)\tDescription: {}",
+            "{}, {}, {}, {}, {}, {}, {}, {} {}, {}",
             self.id,
             self.name,
             self.priority,
@@ -89,9 +96,12 @@ impl TaskManager {
         self.tasks.iter().find(|t| t.id == id)
     }
 
-    pub fn list_tasks(&self) {
+    pub fn list_tasks(&self, show_header: bool) {
+        let mut is_first = true;
+
         for i in self.tasks.iter() {
-            i.print();
+            i.print(is_first && show_header);
+            is_first = false;
         }
     }
 

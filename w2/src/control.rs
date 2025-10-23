@@ -30,18 +30,18 @@ pub fn serialize_json(path: &PathBuf, tm: &TaskManager) {
     }
 }
 
-pub fn list(path: &PathBuf) -> TaskManager {
+pub fn list(path: &PathBuf, show_header: bool) -> TaskManager {
     let tm = deserialize_json(path);
-    tm.list_tasks();
+    tm.list_tasks(show_header);
     tm
 }
 
-pub fn list_by_id(path: &PathBuf, id: i32) -> TaskManager {
+pub fn list_by_id(path: &PathBuf, id: i32, show_header: bool) -> TaskManager {
     let tm = deserialize_json(path);
     let task = tm.list_task_by_id(id);
 
     match task {
-        Some(val) => val.print(),
+        Some(val) => val.print(show_header),
         None => println!("Task with ID {id} not found"),
     }
 

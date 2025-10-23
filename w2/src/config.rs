@@ -9,6 +9,9 @@ pub struct Config {
 
     #[command()]
     pub path: Option<PathBuf>,
+
+    #[arg(long)]
+    pub show_header: bool,
 }
 
 #[derive(Subcommand, Debug)]
