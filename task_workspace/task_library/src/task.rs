@@ -7,6 +7,8 @@ use std::{
 use chrono::{NaiveDate, TimeDelta};
 use serde::{Deserialize, Serialize};
 
+use crate::config;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Task {
     pub id: i32,
@@ -18,21 +20,6 @@ pub struct Task {
     pub real_from: Option<NaiveDate>,
     pub real_duration: Option<TimeDelta>,
     // dependency:
-}
-
-pub mod task {
-    use chrono::{NaiveDate, TimeDelta};
-
-    pub trait ReadFromUser {
-        fn read_id() -> i32;
-        fn read_name() -> String;
-        fn read_description() -> String;
-        fn read_priority() -> i32;
-        fn read_planned_from() -> NaiveDate;
-        fn read_planned_duration() -> TimeDelta;
-        fn read_real_from() -> Option<NaiveDate>;
-        fn read_real_duration() -> Option<TimeDelta>;
-    }
 }
 
 impl Task {
@@ -265,14 +252,3 @@ pub fn create_task_from_console() -> Task {
         real_duration,
     }
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//
-//     #[test]
-//     fn it_works() {
-//         let result = add(2, 2);
-//         assert_eq!(result, 4);
-//     }
-// }
