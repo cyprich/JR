@@ -1,6 +1,6 @@
 use std::{fs::File, path::PathBuf};
 
-use crate::task::{TaskManager, create_task_from_console};
+use crate::task::{TaskManager, create_task_from_console, parse_string, read_string};
 
 pub fn deserialize_json(path: &PathBuf) -> TaskManager {
     let tm: TaskManager;
@@ -58,5 +58,27 @@ pub fn add(path: &PathBuf) -> TaskManager {
 pub fn remove_by_id(path: &PathBuf, id: i32) -> TaskManager {
     let mut tm = deserialize_json(path);
     tm.remove_task_by_id(id);
+    tm
+}
+
+pub fn interactive(path: &PathBuf, show_header: bool) -> TaskManager {
+    let mut tm = deserialize_json(path);
+
+    println!("Launching in interactive mode...");
+
+    list(path, show_header);
+
+    loop {
+        add(path);
+        println!();
+        list(path, show_header);
+        let choice = read_string("Do you want to add another task? [y/N]: ");
+        let choice = choice.to_lowercase();
+
+        if choice != "y" || choice != "yes" {
+            break;
+        }
+    }
+
     tm
 }

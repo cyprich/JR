@@ -20,4 +20,5 @@ pub enum Commands {
     ListById { id: i32 },
     Add,
     RemoveById { id: i32 },
+    Interactive,
 }

@@ -7,7 +7,7 @@ mod config;
 use config::Config;
 
 mod control;
-use crate::control::{add, list, list_by_id, remove_by_id, serialize_json};
+use crate::control::{add, interactive, list, list_by_id, remove_by_id, serialize_json};
 
 fn main() {
     let mut args = Config::parse();
@@ -24,17 +24,15 @@ fn main() {
 
     let path = args.path.unwrap();
 
-    // pri moznosti list, ak pouzivatel zada prepinac --show-header, zobrazi sa okrem zoznamu
-    // taskov aj hlavicka - popis jednotlivych stlpcov, ktore sa vypisu
-    //
-    // pri pridavani taskov upravit nacitavanie taym sposobom, ze ked pouzivatel zada `-`  pri
-    // nepoivnnych atributoch, tak tieto sa nastavia na hodnotu none
+    // pridat commant interactive, ktory spusti appku v interktivnom rezime (t.j. bude v cykle
+    // alebo pod. citat prikazy od pouzivatela a vykonavat ich ky sa nezada exit alebo tak)
 
     let tm = match args.command {
         config::Commands::List => list(&path, args.show_header),
         config::Commands::ListById { id } => list_by_id(&path, id, args.show_header),
         config::Commands::Add => add(&path),
         config::Commands::RemoveById { id } => remove_by_id(&path, id),
+        config::Commands::Interactive => interactive(&path),
     };
 
     serialize_json(&path, &tm);

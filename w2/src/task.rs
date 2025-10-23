@@ -166,7 +166,7 @@ impl TaskManager {
     }
 }
 
-fn read_string(message: &str) -> String {
+pub fn read_string(message: &str) -> String {
     print!("{message}");
     stdout().flush().unwrap();
     let mut buf = String::new();
@@ -177,7 +177,7 @@ fn read_string(message: &str) -> String {
     parse_string(&buf)
 }
 
-fn parse_string(string: &str) -> String {
+pub fn parse_string(string: &str) -> String {
     string.trim().to_string()
 }
 
