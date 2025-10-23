@@ -209,6 +209,28 @@ fn parse_timedelta(string: &str) -> TimeDelta {
     TimeDelta::days(number.into())
 }
 
+fn read_date_optional(message: &str) -> Option<NaiveDate> {
+    let string = read_string(message);
+    let string = string.trim();
+
+    if string == "-" || string.is_empty() {
+        return None;
+    }
+
+    Some(parse_date(string))
+}
+
+fn read_timedelta_optional(message: &str) -> Option<TimeDelta> {
+    let string = read_string(message);
+    let string = string.trim();
+
+    if string == "-" || string.is_empty() {
+        return None;
+    }
+
+    Some(parse_timedelta(string))
+}
+
 pub fn create_task_from_console() -> Task {
     let id = read_number("ID of Task: ");
     let name = read_string("Name of Task: ");
@@ -216,8 +238,8 @@ pub fn create_task_from_console() -> Task {
     let priority = read_number("Priority of Task: ");
     let planned_from = read_date("Date from (ex. 1.1.2025): ");
     let planned_duration = read_timedelta("Planned duration (days): ");
-    let real_from = None;
-    let real_duration = None;
+    let real_from = read_date_optional("Real from (ex. 1.1.2025): ");
+    let real_duration = read_timedelta_optional("Real duration (days): ");
 
     Task {
         id,
