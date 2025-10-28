@@ -1,6 +1,7 @@
 use clap::Parser;
 use std::path::PathBuf;
 
+use task_library::control;
 mod config;
 use config::Config;
 
@@ -20,18 +21,19 @@ fn main() {
         }
     };
 
-    // let path = args.path.unwrap();
+    let path = args.path.unwrap();
 
-    // pridat commant interactive, ktory spusti appku v interktivnom rezime (t.j. bude v cykle
-    // alebo pod. citat prikazy od pouzivatela a vykonavat ich ky sa nezada exit alebo tak)
+    // pridat command interactive, ktory spusti appku v interktivnom rezime (t.j. bude v cykle
+    // alebo pod. citat prikazy od pouzivatela a vykonavat ich kym sa nezada exit alebo tak)
 
-    // let tm = match args.command {
-    //     config::Commands::List => list(&path, args.show_header),
-    //     config::Commands::ListById { id } => list_by_id(&path, id, args.show_header),
-    //     config::Commands::Add => add(&path),
-    //     config::Commands::RemoveById { id } => remove_by_id(&path, id),
-    //     config::Commands::Interactive => interactive(&path),
-    // };
-    //
+    match args.command {
+        config::Commands::List => control::list(&path, args.show_header),
+        config::Commands::ListById { id } => control::list_by_id(&path, id, args.show_header),
+        config::Commands::Add => control::add(&path),
+        config::Commands::RemoveById { id } => control::remove_by_id(&path, id),
+        // config::Commands::Interactive => interactive(&path),  // TODO
+        config::Commands::Interactive => (),
+    };
+
     // serialize_json(&path, &tm);
 }
