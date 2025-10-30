@@ -2,6 +2,7 @@ use crate::event::{AppEvent, Event, EventHandler};
 use ratatui::{
     DefaultTerminal,
     crossterm::event::{KeyCode, KeyEvent, KeyModifiers},
+    layout::{Constraint, Layout},
 };
 
 /// Application.
@@ -34,7 +35,19 @@ impl App {
     /// Run the application's main loop.
     pub async fn run(mut self, mut terminal: DefaultTerminal) -> color_eyre::Result<()> {
         while self.running {
-            terminal.draw(|frame| frame.render_widget(&self, frame.area()))?;
+            terminal.draw(|frame| {
+                let parts = Layout::default()
+                    .direction(ratatui::layout::Direction::Vertical)
+                    .constraints(vec![
+                        Constraint::Percentage(5),
+                        Constraint::Percentage(50),
+                        Constraint::Percentage(45),
+                    ])
+                    .split(frame.area());
+                // frame.render_widget(&self, frame.area())
+                // frame.render_widget(&self, parts[1]);
+                frame.render_widget(&self, frame.area());
+            })?;
             match self.events.next().await? {
                 Event::Tick => self.tick(),
                 Event::Crossterm(event) => match event {
