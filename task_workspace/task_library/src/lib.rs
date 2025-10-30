@@ -3,11 +3,6 @@ pub mod control;
 pub mod task {
     use chrono::{NaiveDate, TimeDelta};
     use serde::{Deserialize, Serialize};
-    use std::{
-        fs::File,
-        io::{BufRead, BufReader, Write, stdin, stdout},
-        path::Path,
-    };
 
     #[derive(Debug, Serialize, Deserialize)]
     pub struct Task {
@@ -81,7 +76,7 @@ pub mod task {
 
         pub fn print_header() {
             println!(
-"Task ID, Priority, Planned from, Planned to, Real from, Real to, Description
+                "Task ID, Priority, Planned from, Planned to, Real from, Real to, Description
 ----------------------------------------------------------------------------"
             );
         }
@@ -133,144 +128,51 @@ pub mod task {
             self.tasks.sort_by(|a, b| a.priority.cmp(&b.priority));
         }
 
-        pub fn read_from_csv(&mut self, file_path: &Path, has_header: bool) {
-            let file = File::open(file_path).expect("Cannot open file {file_path}");
-            let file_lines = BufReader::new(file).lines();
-
-            let lines = file_lines.skip(if has_header { 1 } else { 0 });
-
-            for line in lines {
-                match line {
-                    Ok(val) => {
-                        let t = self.parse_line(&val);
-                        self.add_task(t);
-                    }
-                    Err(e) => {
-                        println!("{e}")
-                    }
-                }
-            }
-        }
-
-        fn parse_line(&self, line: &str) -> Task {
-            let split: Vec<&str> = line.split(',').collect();
-
-            let real_from = if split[6].is_empty() {
-                None
-            } else {
-                Some(parse_date(split[6]))
-            };
-
-            let real_duration = if split[7].is_empty() {
-                None
-            } else {
-                Some(parse_timedelta(split[7]))
-            };
-
-            Task {
-                id: parse_number(split[0]),
-                name: parse_string(split[1]),
-                description: parse_string(split[2]),
-                priority: parse_number(split[3]),
-                planned_from: parse_date(split[4]),
-                planned_duration: parse_timedelta(split[5]),
-                real_from,
-                real_duration,
-            }
-        }
-    }
-
-    impl Default for TaskManager {
-        fn default() -> Self {
-            Self::new()
-        }
-    }
-
-    pub fn read_string(message: &str) -> String {
-        print!("{message}");
-        stdout().flush().unwrap();
-        let mut buf = String::new();
-        stdin()
-            .read_line(&mut buf)
-            .expect("Cannot read from console");
-
-        parse_string(&buf)
-    }
-
-    pub fn parse_string(string: &str) -> String {
-        string.trim().to_string()
-    }
-
-    fn read_number(message: &str) -> i32 {
-        let string = read_string(message);
-        parse_number(&string)
-    }
-
-    fn parse_number(string: &str) -> i32 {
-        string.trim().parse().expect("Couldn't convert to i32")
-    }
-
-    fn read_date(message: &str) -> NaiveDate {
-        let string = read_string(message);
-        parse_date(&string)
-    }
-
-    fn parse_date(string: &str) -> NaiveDate {
-        NaiveDate::parse_from_str(string, "%d.%m.%Y").expect("Couldn't parse date")
-    }
-
-    fn read_timedelta(message: &str) -> TimeDelta {
-        let string = read_string(message);
-        parse_timedelta(&string)
-    }
-
-    fn parse_timedelta(string: &str) -> TimeDelta {
-        let number = parse_number(string);
-        TimeDelta::days(number.into())
-    }
-
-    fn read_date_optional(message: &str) -> Option<NaiveDate> {
-        let string = read_string(message);
-        let string = string.trim();
-
-        if string == "-" || string.is_empty() {
-            return None;
-        }
-
-        Some(parse_date(string))
-    }
-
-    fn read_timedelta_optional(message: &str) -> Option<TimeDelta> {
-        let string = read_string(message);
-        let string = string.trim();
-
-        if string == "-" || string.is_empty() {
-            return None;
-        }
-
-        Some(parse_timedelta(string))
-    }
-
-    pub fn create_task_from_console() -> Task {
-        let id = read_number("ID of Task: ");
-        let name = read_string("Name of Task: ");
-        let description = read_string("Description of Task: ");
-        let priority = read_number("Priority of Task: ");
-        let planned_from = read_date("Date from (ex. 1.1.2025): ");
-        let planned_duration = read_timedelta("Planned duration (days): ");
-        let real_from = read_date_optional("Real from (ex. 1.1.2025): ");
-        let real_duration = read_timedelta_optional("Real duration (days): ");
-
-        Task {
-            id,
-            name,
-            description,
-            priority,
-            planned_from,
-            planned_duration,
-            real_from,
-            real_duration,
-        }
+        // pub fn read_from_csv(&mut self, file_path: &Path, has_header: bool) {
+        //     let file = File::open(file_path).expect("Cannot open file {file_path}");
+        //     let file_lines = BufReader::new(file).lines();
+        //
+        //     let lines = file_lines.skip(if has_header { 1 } else { 0 });
+        //
+        //     for line in lines {
+        //         match line {
+        //             Ok(val) => {
+        //                 let t = self.parse_line(&val);
+        //                 self.add_task(t);
+        //             }
+        //             Err(e) => {
+        //                 println!("{e}")
+        //             }
+        //         }
+        //     }
+        // }
+        //
+        // fn parse_line(&self, line: &str) -> Task {
+        //     let split: Vec<&str> = line.split(',').collect();
+        //
+        //     let real_from = if split[6].is_empty() {
+        //         None
+        //     } else {
+        //         Some(parse_date(split[6]))
+        //     };
+        //
+        //     let real_duration = if split[7].is_empty() {
+        //         None
+        //     } else {
+        //         Some(parse_timedelta(split[7]))
+        //     };
+        //
+        //     Task {
+        //         id: parse_number(split[0]),
+        //         name: parse_string(split[1]),
+        //         description: parse_string(split[2]),
+        //         priority: parse_number(split[3]),
+        //         planned_from: parse_date(split[4]),
+        //         planned_duration: parse_timedelta(split[5]),
+        //         real_from,
+        //         real_duration,
+        //     }
+        // }
     }
 }
 

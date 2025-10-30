@@ -5,6 +5,9 @@ use task_library::control;
 mod config;
 use config::Config;
 
+mod console_reader;
+use console_reader::ConsoleReader;
+
 // mod control;
 // use crate::control::{add, interactive, list, list_by_id, remove_by_id, serialize_json};
 
@@ -29,10 +32,11 @@ fn main() {
     match args.command {
         config::Commands::List => control::list(&path, args.show_header),
         config::Commands::ListById { id } => control::list_by_id(&path, id, args.show_header),
-        config::Commands::Add => control::add(&path),
+        config::Commands::Add => control::add(&path, &ConsoleReader),
         config::Commands::RemoveById { id } => control::remove_by_id(&path, id),
-        // config::Commands::Interactive => interactive(&path),  // TODO
-        config::Commands::Interactive => (),
+        config::Commands::Interactive => {
+            control::interactive(&path, args.show_header, &ConsoleReader)
+        }
     };
 
     // serialize_json(&path, &tm);

@@ -1,6 +1,6 @@
 use std::{fs::File, path::PathBuf};
 
-use crate::task::{Task, TaskManager, create_task_from_console};
+use crate::task::{ReadTask, Task, TaskManager};
 
 pub fn deserialize_json(path: &PathBuf) -> TaskManager {
     let tm: TaskManager;
@@ -54,10 +54,21 @@ pub fn list_by_id(path: &PathBuf, id: i32, show_header: bool) {
 }
 
 // pub fn add(path: &PathBuf, reader: impl ReadFromUser) {
-pub fn add(path: &PathBuf) {
+pub fn add(path: &PathBuf, reader: &impl ReadTask) {
     let mut tm = deserialize_json(path);
-    let task = create_task_from_console();
+    let task = Task {
+        id: reader.read_id("ID of Task: "),
+        name: reader.read_name("Name of Task: "),
+        description: reader.read_description("Description of Task: "),
+        priority: reader.read_priority("Priority of Task: "),
+        planned_from: reader.read_planned_from("Planned date from (ex. 1.1.2025): "),
+        planned_duration: reader.read_planned_duration("Planned duration (whole days): "),
+        real_from: reader.read_real_from("Real date from (ex. 1.1.2025) (optional): "),
+        real_duration: reader.read_real_duration("Real duration (whole days) (optional): "),
+    };
+
     tm.add_task(task);
+    serialize_json(path, &tm);
 }
 
 pub fn remove_by_id(path: &PathBuf, id: i32) {
@@ -67,22 +78,15 @@ pub fn remove_by_id(path: &PathBuf, id: i32) {
 }
 
 // TODO
-// pub fn interactive(path: &PathBuf, show_header: bool) {
-//     let mut tm = deserialize_json(path);
-//
-//     println!("Launching in interactive mode...");
-//
-//     list(path, show_header);
-//
-//     loop {
-//         add(path);
-//         println!();
-//         list(path, show_header);
-//         let choice = read_string("Do you want to add another task? [y/N]: ");
-//         let choice = choice.to_lowercase();
-//
-//         if choice != "y" || choice != "yes" {
-//             break;
-//         }
-//     }
-// }
+pub fn interactive(path: &PathBuf, show_header: bool, reader: &impl ReadTask) {
+    println!("Launching in interactive mode... Press ctrl+c to quit");
+
+    list(path, show_header);
+
+    loop {
+        println!();
+        add(path, reader);
+        println!();
+        list(path, show_header);
+    }
+}
