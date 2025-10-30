@@ -752,6 +752,7 @@ dependencies = [
  "crossterm",
  "futures",
  "ratatui",
+ "task_library",
  "tokio",
 ]
 

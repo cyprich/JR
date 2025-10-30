@@ -1,27 +1,32 @@
+use std::path::PathBuf;
+
 use crate::event::{AppEvent, Event, EventHandler};
 use ratatui::{
     DefaultTerminal,
     crossterm::event::{KeyCode, KeyEvent, KeyModifiers},
     layout::{Constraint, Layout},
 };
+use task_library::{control::deserialize_json, task::TaskManager};
 
 /// Application.
 #[derive(Debug)]
 pub struct App {
     /// Is the application running?
     pub running: bool,
-    /// Counter.
-    pub counter: u8,
     /// Event handler.
     pub events: EventHandler,
+
+    pub tm: TaskManager,
+    pub message: String,
 }
 
 impl Default for App {
     fn default() -> Self {
         Self {
             running: true,
-            counter: 0,
             events: EventHandler::new(),
+            tm: deserialize_json(&PathBuf::from("tasks.json")),
+            message: String::from(""),
         }
     }
 }
@@ -59,9 +64,9 @@ impl App {
                     _ => {}
                 },
                 Event::App(app_event) => match app_event {
-                    AppEvent::Increment => self.increment_counter(),
-                    AppEvent::Decrement => self.decrement_counter(),
                     AppEvent::Quit => self.quit(),
+                    AppEvent::Add => self.add_task(),
+                    AppEvent::List => self.list_tasks(),
                 },
             }
         }
@@ -75,8 +80,10 @@ impl App {
             KeyCode::Char('c' | 'C') if key_event.modifiers == KeyModifiers::CONTROL => {
                 self.events.send(AppEvent::Quit)
             }
-            KeyCode::Right => self.events.send(AppEvent::Increment),
-            KeyCode::Left => self.events.send(AppEvent::Decrement),
+            // KeyCode::Right => self.events.send(AppEvent::Increment),
+            // KeyCode::Left => self.events.send(AppEvent::Decrement),
+            KeyCode::Char('a' | 'A') => self.events.send(AppEvent::Add),
+            KeyCode::Char('l' | 'L') => self.events.send(AppEvent::List),
             // Other handlers you could add here.
             _ => {}
         }
@@ -94,11 +101,24 @@ impl App {
         self.running = false;
     }
 
-    pub fn increment_counter(&mut self) {
-        self.counter = self.counter.saturating_add(1);
+    // pub fn increment_counter(&mut self) {
+    //     self.counter = self.counter.saturating_add(1);
+    // }
+    //
+    // pub fn decrement_counter(&mut self) {
+    //     self.counter = self.counter.saturating_sub(1);
+    // }
+
+    pub fn get_tasks(&self) -> String {
+        let string: String = self
+            .tm
+            .get_tasks()
+            .iter()
+            .map(|task| format!("{task}\n"))
+            .collect();
+
+        string
     }
 
-    pub fn decrement_counter(&mut self) {
-        self.counter = self.counter.saturating_sub(1);
-    }
+    pub fn add_task(&self) {}
 }

@@ -1,8 +1,4 @@
-use std::{
-    fs::File,
-    io::{Write, stdin, stdout},
-    path::PathBuf,
-};
+use std::{fs::File, path::PathBuf};
 
 use crate::task::{ReadTask, Task, TaskManager};
 

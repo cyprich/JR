@@ -1,6 +1,8 @@
 pub mod control;
 
 pub mod task {
+    use std::ffi::os_str::Display;
+
     use chrono::{NaiveDate, TimeDelta};
     use serde::{Deserialize, Serialize};
 
@@ -82,6 +84,30 @@ pub mod task {
         }
     }
 
+    impl std::fmt::Display for Task {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(
+                f,
+                "#{} {} ({}) with priority {}, planned start: {} for {} days, real start: {} for {} days",
+                self.id,
+                self.name,
+                self.description,
+                self.priority,
+                self.planned_from,
+                self.planned_duration.num_days(),
+                match self.real_from {
+                    Some(val) => val.to_string(),
+                    None => String::from("-"),
+                },
+                match self.real_duration {
+                    Some(val) => val.num_days().to_string(),
+                    None => String::from("-"),
+                    // None => 0,
+                },
+            )
+        }
+    }
+
     #[derive(Debug, Serialize, Deserialize)]
     pub struct TaskManager {
         tasks: Vec<Task>,
@@ -90,6 +116,10 @@ pub mod task {
     impl TaskManager {
         pub fn new() -> TaskManager {
             TaskManager { tasks: vec![] }
+        }
+
+        pub fn get_tasks(&self) -> &Vec<Task> {
+            &self.tasks
         }
 
         pub fn add_task(&mut self, task: Task) {
@@ -127,52 +157,6 @@ pub mod task {
         pub fn sort_by_priority(&mut self) {
             self.tasks.sort_by(|a, b| a.priority.cmp(&b.priority));
         }
-
-        // pub fn read_from_csv(&mut self, file_path: &Path, has_header: bool) {
-        //     let file = File::open(file_path).expect("Cannot open file {file_path}");
-        //     let file_lines = BufReader::new(file).lines();
-        //
-        //     let lines = file_lines.skip(if has_header { 1 } else { 0 });
-        //
-        //     for line in lines {
-        //         match line {
-        //             Ok(val) => {
-        //                 let t = self.parse_line(&val);
-        //                 self.add_task(t);
-        //             }
-        //             Err(e) => {
-        //                 println!("{e}")
-        //             }
-        //         }
-        //     }
-        // }
-        //
-        // fn parse_line(&self, line: &str) -> Task {
-        //     let split: Vec<&str> = line.split(',').collect();
-        //
-        //     let real_from = if split[6].is_empty() {
-        //         None
-        //     } else {
-        //         Some(parse_date(split[6]))
-        //     };
-        //
-        //     let real_duration = if split[7].is_empty() {
-        //         None
-        //     } else {
-        //         Some(parse_timedelta(split[7]))
-        //     };
-        //
-        //     Task {
-        //         id: parse_number(split[0]),
-        //         name: parse_string(split[1]),
-        //         description: parse_string(split[2]),
-        //         priority: parse_number(split[3]),
-        //         planned_from: parse_date(split[4]),
-        //         planned_duration: parse_timedelta(split[5]),
-        //         real_from,
-        //         real_duration,
-        //     }
-        // }
     }
 }
 
