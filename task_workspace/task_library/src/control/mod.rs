@@ -30,15 +30,12 @@ pub fn serialize_json(path: &PathBuf, tm: &TaskManager) {
     }
 }
 
-pub fn list(path: &PathBuf, show_header: bool) {
-    let tm = deserialize_json(path);
-    tm.list_tasks(show_header);
-    serialize_json(path, &tm);
+pub fn list(task_manager: &TaskManager, show_header: bool) {
+    task_manager.list_tasks(show_header);
 }
 
-pub fn list_by_id(path: &PathBuf, id: i32, show_header: bool) {
-    let tm = deserialize_json(path);
-    let task = tm.list_task_by_id(id);
+pub fn list_by_id(task_manager: &TaskManager, id: i32, show_header: bool) {
+    let task = task_manager.list_task_by_id(id);
 
     match task {
         Some(val) => {
@@ -49,13 +46,10 @@ pub fn list_by_id(path: &PathBuf, id: i32, show_header: bool) {
         }
         None => println!("Task with ID {id} not found"),
     }
-
-    serialize_json(path, &tm);
 }
 
 // pub fn add(path: &PathBuf, reader: impl ReadFromUser) {
-pub fn add(path: &PathBuf, reader: &impl ReadTask) {
-    let mut tm = deserialize_json(path);
+pub fn add(task_manager: &mut TaskManager, reader: &impl ReadTask) {
     let task = Task {
         id: reader.read_id("ID of Task: "),
         name: reader.read_name("Name of Task: "),
@@ -67,26 +61,29 @@ pub fn add(path: &PathBuf, reader: &impl ReadTask) {
         real_duration: reader.read_real_duration("Real duration (whole days) (optional): "),
     };
 
-    tm.add_task(task);
-    serialize_json(path, &tm);
+    task_manager.add_task(task);
 }
 
-pub fn remove_by_id(path: &PathBuf, id: i32) {
-    let mut tm = deserialize_json(path);
-    tm.remove_task_by_id(id);
-    serialize_json(path, &tm);
+pub fn remove_by_id(task_manager: &mut TaskManager, id: i32) {
+    task_manager.remove_task_by_id(id);
 }
 
 // TODO
-pub fn interactive(path: &PathBuf, show_header: bool, reader: &impl ReadTask) {
-    println!("Launching in interactive mode... Press ctrl+c to quit");
+pub fn interactive(
+    task_manager: &mut TaskManager,
+    path: &PathBuf,
+    show_header: bool,
+    reader: &impl ReadTask,
+) {
+    println!("Launching in interactive mode... Press ctrl+c to quit\n");
 
-    list(path, show_header);
+    list(task_manager, show_header);
 
     loop {
         println!();
-        add(path, reader);
+        add(task_manager, reader);
         println!();
-        list(path, show_header);
+        list(task_manager, show_header);
+        serialize_json(path, task_manager);
     }
 }

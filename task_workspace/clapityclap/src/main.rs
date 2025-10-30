@@ -1,7 +1,7 @@
 use clap::Parser;
 use std::path::PathBuf;
 
-use task_library::control;
+use task_library::control::{self, deserialize_json, serialize_json};
 mod config;
 use config::Config;
 
@@ -25,19 +25,19 @@ fn main() {
     };
 
     let path = args.path.unwrap();
-
-    // pridat command interactive, ktory spusti appku v interktivnom rezime (t.j. bude v cykle
-    // alebo pod. citat prikazy od pouzivatela a vykonavat ich kym sa nezada exit alebo tak)
+    let mut task_manager = deserialize_json(&path);
 
     match args.command {
-        config::Commands::List => control::list(&path, args.show_header),
-        config::Commands::ListById { id } => control::list_by_id(&path, id, args.show_header),
-        config::Commands::Add => control::add(&path, &ConsoleReader),
-        config::Commands::RemoveById { id } => control::remove_by_id(&path, id),
+        config::Commands::List => control::list(&task_manager, args.show_header),
+        config::Commands::ListById { id } => {
+            control::list_by_id(&task_manager, id, args.show_header)
+        }
+        config::Commands::Add => control::add(&mut task_manager, &ConsoleReader),
+        config::Commands::RemoveById { id } => control::remove_by_id(&mut task_manager, id),
         config::Commands::Interactive => {
-            control::interactive(&path, args.show_header, &ConsoleReader)
+            control::interactive(&mut task_manager, &path, args.show_header, &ConsoleReader)
         }
     };
 
-    // serialize_json(&path, &tm);
+    serialize_json(&path, &task_manager);
 }
