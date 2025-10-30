@@ -1,4 +1,8 @@
-use std::{fs::File, path::PathBuf};
+use std::{
+    fs::File,
+    io::{Write, stdin, stdout},
+    path::PathBuf,
+};
 
 use crate::task::{ReadTask, Task, TaskManager};
 
@@ -66,24 +70,4 @@ pub fn add(tm: &mut TaskManager, reader: &impl ReadTask) {
 
 pub fn remove_by_id(tm: &mut TaskManager, id: i32) {
     tm.remove_task_by_id(id);
-}
-
-// TODO
-pub fn interactive(
-    tm: &mut TaskManager,
-    path: &PathBuf,
-    show_header: bool,
-    reader: &impl ReadTask,
-) {
-    println!("Launching in interactive mode... Press ctrl+c to quit\n");
-
-    list(tm, show_header);
-
-    loop {
-        println!();
-        add(tm, reader);
-        println!();
-        list(tm, show_header);
-        serialize_json(path, tm);
-    }
 }

@@ -1,12 +1,17 @@
 use clap::Parser;
 use std::path::PathBuf;
 
-use task_library::control::{self, deserialize_json, serialize_json};
+use task_library::{
+    control::{self, add, deserialize_json, list, remove_by_id, serialize_json},
+    task::{ReadTask, TaskManager},
+};
 mod config;
 use config::Config;
 
 mod console_reader;
 use console_reader::ConsoleReader;
+
+use crate::console_reader::read_string;
 
 // mod control;
 // use crate::control::{add, interactive, list, list_by_id, remove_by_id, serialize_json};
@@ -35,9 +40,26 @@ fn main() {
         config::Commands::Add => control::add(&mut task_manager, &ConsoleReader),
         config::Commands::RemoveById { id } => control::remove_by_id(&mut task_manager, id),
         config::Commands::Interactive => {
-            control::interactive(&mut task_manager, &path, args.show_header, &ConsoleReader)
+            interactive(&mut task_manager, args.show_header, &ConsoleReader)
         }
     };
 
     serialize_json(&path, &task_manager);
+}
+
+fn interactive(tm: &mut TaskManager, show_header: bool, reader: &impl ReadTask) {
+    println!("Launching in interactive mode... Press ctrl+c to quit\n");
+
+    loop {
+        let string = read_string("Command: ");
+        let string = string.trim();
+
+        match string {
+            "quit" => break,
+            "list" => list(tm, show_header),
+            "add" => add(tm, reader),
+            // "remove" => remove_by_id(tm, id),
+            _ => println!("Unknown command... available commands are: list, add, quit"),
+        }
+    }
 }
