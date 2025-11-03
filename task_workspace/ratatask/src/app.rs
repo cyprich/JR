@@ -121,4 +121,6 @@ impl App {
     }
 
     pub fn add_task(&self) {}
+
+    pub fn list_tasks(&self) {}
 }

@@ -32,7 +32,7 @@ fn main() {
         config::Commands::ListById { id } => list_by_id(&path, id, args.show_header),
         config::Commands::Add => add(&path),
         config::Commands::RemoveById { id } => remove_by_id(&path, id),
-        config::Commands::Interactive => interactive(&path),
+        config::Commands::Interactive => interactive(&path, args.show_header),
     };
 
     serialize_json(&path, &tm);
