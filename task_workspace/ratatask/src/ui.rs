@@ -15,10 +15,10 @@ impl Widget for &App {
     // - https://docs.rs/ratatui/latest/ratatui/widgets/index.html
     // - https://github.com/ratatui/ratatui/tree/master/examples
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let block = Block::bordered()
-            .title("Task Manager")
-            .title_alignment(Alignment::Center)
-            .border_type(BorderType::Rounded);
+        // let block = Block::bordered()
+        //     .title("Task Manager")
+        //     .title_alignment(Alignment::Center)
+        //     .border_type(BorderType::Rounded);
 
         // let text = format!(
         //     "This is a tui template.\n\
@@ -28,19 +28,19 @@ impl Widget for &App {
         //     self.counter
         // );
 
-        let text = format!(
-            "List of current tasks:\n\
-            {}
-            ",
-            self.message
-        );
+        // let text = format!(
+        //     "List of current tasks:\n\
+        //     {}
+        //     ",
+        //     self.message
+        // );
 
-        let paragraph = Paragraph::new(text)
-            .block(block)
-            .fg(Color::Cyan)
-            .bg(Color::Black)
-            .centered();
+        // let paragraph = Paragraph::new("hello")
+        //     .block(block)
+        //     .fg(Color::Cyan)
+        //     .bg(Color::Black)
+        //     .centered();
 
-        paragraph.render(area, buf);
+        // paragraph.render(area, buf);
     }
 }
