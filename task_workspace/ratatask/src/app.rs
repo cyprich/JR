@@ -1,12 +1,11 @@
-use std::{fmt::format, path::PathBuf, vec};
+use std::path::PathBuf;
 
 use crate::event::{AppEvent, Event, EventHandler};
 use ratatui::{
     DefaultTerminal,
     crossterm::event::{KeyCode, KeyEvent, KeyModifiers},
-    layout::{Alignment, Constraint, Layout},
     style::{Color, Style, Stylize},
-    widgets::{Block, BorderType, List, Paragraph, Row, Table},
+    widgets::{Row, Table},
 };
 use task_library::{control::deserialize_json, task::TaskManager};
 
@@ -19,7 +18,6 @@ pub struct App {
     pub events: EventHandler,
 
     pub tm: TaskManager,
-    pub message: String,
 }
 
 impl Default for App {
@@ -28,7 +26,6 @@ impl Default for App {
             running: true,
             events: EventHandler::new(),
             tm: deserialize_json(&PathBuf::from("tasks.json")),
-            message: String::from(""),
         }
     }
 }
