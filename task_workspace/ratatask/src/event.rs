@@ -34,7 +34,7 @@ pub enum AppEvent {
     /// Quit the application.
     Quit,
     Add,
-    // List,
+    Delete, // List,
 }
 
 /// Terminal event handler.

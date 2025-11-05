@@ -4,10 +4,8 @@ use crate::event::{AppEvent, Event, EventHandler};
 use ratatui::{
     DefaultTerminal,
     crossterm::event::{KeyCode, KeyEvent, KeyModifiers},
-    layout::Constraint,
-    style::{Color, Style, Stylize},
-    widgets::{Row, Table},
 };
+
 use task_library::{control::deserialize_json, task::TaskManager};
 
 /// Application.
@@ -57,6 +55,7 @@ impl App {
                 Event::App(app_event) => match app_event {
                     AppEvent::Quit => self.quit(),
                     AppEvent::Add => self.add_task(),
+                    AppEvent::Delete => self.delete_task(),
                 },
             }
         }
@@ -70,11 +69,8 @@ impl App {
             KeyCode::Char('c' | 'C') if key_event.modifiers == KeyModifiers::CONTROL => {
                 self.events.send(AppEvent::Quit)
             }
-            // KeyCode::Right => self.events.send(AppEvent::Increment),
-            // KeyCode::Left => self.events.send(AppEvent::Decrement),
             KeyCode::Char('a' | 'A') => self.events.send(AppEvent::Add),
-            // KeyCode::Char('l' | 'L') => self.events.send(AppEvent::List),
-            // Other handlers you could add here.
+            KeyCode::Char('d' | 'D') => self.events.send(AppEvent::Delete),
             _ => {}
         }
         Ok(())
@@ -93,64 +89,5 @@ impl App {
 
     pub fn add_task(&self) {}
 
-    pub fn get_tasks_table(&self) -> Table {
-        let count = self.tm.get_tasks().len();
-
-        let t = Table::default().header(
-            Row::new(vec![
-                "ID",
-                "Name",
-                "Description",
-                "Priority",
-                "Planned date",
-                "Real date",
-            ])
-            .style(Style::new().bold().fg(Color::Black).bg(Color::Cyan)),
-        ); // TODO add other fields 
-
-        let row_widths = [
-            Constraint::Length(5),
-            Constraint::Min(0),
-            Constraint::Min(0),
-            Constraint::Min(0),
-            Constraint::Min(0),
-            Constraint::Min(0),
-        ];
-
-        let rows: Vec<Row> = self
-            .tm
-            .get_tasks()
-            .iter()
-            .map(|task| {
-                Row::new(vec![
-                    task.id.to_string(),
-                    task.name.clone(),
-                    task.description.clone(),
-                    task.priority.to_string(),
-                    format!(
-                        "{} to {}",
-                        task.planned_from.to_string(),
-                        task.calculate_planned_end().to_string(),
-                    ),
-                    format!(
-                        "{} to {}",
-                        // task.real_from.unwrap_or("-"),
-                        // task.calculate_real_end().unwrap_or("-")
-                        match task.real_from {
-                            Some(val) => val.to_string(),
-                            None => String::from("-"),
-                        },
-                        match task.calculate_real_end() {
-                            Some(val) => val.to_string(),
-                            None => String::from("-"),
-                        }
-                    ),
-                ])
-            })
-            .collect();
-
-        t.rows(rows)
-            .footer(Row::new(vec![format!("Total: {} tasks", count)]))
-            .widths(row_widths)
-    }
+    pub fn delete_task(&self) {}
 }
