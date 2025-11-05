@@ -58,7 +58,7 @@ fn interactive(tm: &mut TaskManager, show_header: bool, reader: &impl ReadTask) 
             "quit" => break,
             "list" => list(tm, show_header),
             "add" => add(tm, reader),
-            // "remove" => remove_by_id(tm, id),
+            // "remove" => remove_by_id(tm, id), // TODO
             _ => println!("Unknown command... available commands are: list, add, quit"),
         }
     }
