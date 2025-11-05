@@ -127,7 +127,17 @@ pub mod task {
         }
 
         pub fn remove_task_by_id(&mut self, id: i32) {
-            self.tasks.remove(id as usize);
+            for index in 0..self.tasks.len() {
+                let current_task = self.tasks.get(index);
+                match current_task {
+                    Some(t) => {
+                        if t.id == id {
+                            self.tasks.remove(index);
+                        }
+                    }
+                    None => (),
+                }
+            }
         }
 
         pub fn list_task_by_id(&self, id: i32) -> Option<&Task> {
