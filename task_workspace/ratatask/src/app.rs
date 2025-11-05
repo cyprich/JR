@@ -43,42 +43,7 @@ impl App {
     pub async fn run(mut self, mut terminal: DefaultTerminal) -> color_eyre::Result<()> {
         while self.running {
             terminal.draw(|frame| {
-                let main_layout = Layout::default()
-                    .direction(ratatui::layout::Direction::Horizontal)
-                    .constraints(vec![Constraint::Percentage(25), Constraint::Percentage(75)])
-                    .split(frame.area());
-
-                let sub_layout = Layout::default()
-                    .direction(ratatui::layout::Direction::Vertical)
-                    .constraints(vec![Constraint::Length(3), Constraint::Fill(1)])
-                    .split(main_layout[0]);
-
-                let block = Block::bordered()
-                    .title_alignment(Alignment::Center)
-                    .border_type(BorderType::Rounded);
-
-                let table_widget = self
-                    .get_tasks_table()
-                    .block(block.clone().title("Tasks"))
-                    .fg(Color::Cyan)
-                    .bg(Color::Black);
-
-                let name_widget = Paragraph::new("Task Manager")
-                    .block(block.clone())
-                    .fg(Color::Cyan)
-                    .bg(Color::Black)
-                    .centered();
-
-                let action_names = ["Add task", "Remove task"];
-                let actions_widget = List::new(action_names)
-                    .block(block.clone().title("Actions"))
-                    .fg(Color::Cyan)
-                    .bg(Color::Black);
-
-                // frame.render_widget(main_widget, main_layout[1]);
-                frame.render_widget(table_widget, main_layout[1]);
-                frame.render_widget(name_widget, sub_layout[0]);
-                frame.render_widget(actions_widget, sub_layout[1]);
+                frame.render_widget(&self, frame.area());
             })?;
 
             match self.events.next().await? {
@@ -130,7 +95,7 @@ impl App {
 
     pub fn add_task(&self) {}
 
-    fn get_tasks_table(&self) -> Table {
+    pub fn get_tasks_table(&self) -> Table {
         // let rows = self.tm.get_tasks();
         // let widths = vec![];
         // let t = Table::new(rows, widths);
