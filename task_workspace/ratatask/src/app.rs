@@ -4,6 +4,7 @@ use crate::event::{AppEvent, Event, EventHandler};
 use ratatui::{
     DefaultTerminal,
     crossterm::event::{KeyCode, KeyEvent, KeyModifiers},
+    layout::Constraint,
     style::{Color, Style, Stylize},
     widgets::{Row, Table},
 };
@@ -93,15 +94,6 @@ impl App {
     pub fn add_task(&self) {}
 
     pub fn get_tasks_table(&self) -> Table {
-        // let rows = self.tm.get_tasks();
-        // let widths = vec![];
-        // let t = Table::new(rows, widths);
-
-        // pub planned_from: NaiveDate,
-        // pub planned_duration: TimeDelta,
-        // pub real_from: Option<NaiveDate>,
-        // pub real_duration: Option<TimeDelta>,
-
         let count = self.tm.get_tasks().len();
 
         let t = Table::default().header(
@@ -115,6 +107,15 @@ impl App {
             ])
             .style(Style::new().bold().fg(Color::Black).bg(Color::Cyan)),
         ); // TODO add other fields 
+
+        let row_widths = [
+            Constraint::Length(5),
+            Constraint::Min(0),
+            Constraint::Min(0),
+            Constraint::Min(0),
+            Constraint::Min(0),
+            Constraint::Min(0),
+        ];
 
         let rows: Vec<Row> = self
             .tm
@@ -150,5 +151,6 @@ impl App {
 
         t.rows(rows)
             .footer(Row::new(vec![format!("Total: {} tasks", count)]))
+            .widths(row_widths)
     }
 }
