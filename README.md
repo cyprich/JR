@@ -2,7 +2,7 @@
 
 Materiály k predmetu Jazyk Rust
 
-![title image](./onlyrust.jpg)
+![title image](./dontpanic.jpg)
 
 ---
 
