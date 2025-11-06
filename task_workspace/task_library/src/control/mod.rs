@@ -31,11 +31,11 @@ pub fn serialize_json(path: &PathBuf, tm: &TaskManager) {
 }
 
 pub fn list(tm: &TaskManager, show_header: bool) {
-    tm.list_tasks(show_header);
+    tm.print(show_header);
 }
 
 pub fn list_by_id(tm: &TaskManager, id: i32, show_header: bool) {
-    let task = tm.list_task_by_id(id);
+    let task = tm.print_by_id(id);
 
     match task {
         Some(val) => {

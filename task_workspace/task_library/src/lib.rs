@@ -43,35 +43,19 @@ pub mod task {
             }
         }
 
-        pub fn print(&self) {
-            let real_from = match self.real_from {
-                Some(val) => val.to_string(),
-                None => String::from("-"),
-            };
-
-            let real_to = match self.calculate_real_end() {
-                Some(val) => val.to_string(),
-                None => String::from("-"),
-            };
-
-            let real_duration = match self.real_duration {
-                Some(val) => val.num_days().to_string(),
-                None => String::from("-"),
-            };
-
-            println!(
-                "{}, {}, {}, {}, {}, {}, {}, {} {}, {}",
+        pub fn format(&self) -> String {
+            format!(
+                "#{} {}, Prioriy {}, From {} to {}",
                 self.id,
                 self.name,
                 self.priority,
                 self.planned_from,
                 self.calculate_planned_end(),
-                self.planned_duration.num_days(),
-                real_from,
-                real_to,
-                real_duration,
-                self.description
-            );
+            )
+        }
+
+        pub fn print(&self) {
+            println!("{}", self.format());
         }
 
         pub fn print_header() {
@@ -106,6 +90,21 @@ pub mod task {
         }
     }
 
+    impl Clone for Task {
+        fn clone(&self) -> Self {
+            Self {
+                id: self.id.clone(),
+                name: self.name.clone(),
+                description: self.description.clone(),
+                priority: self.priority.clone(),
+                planned_from: self.planned_from.clone(),
+                planned_duration: self.planned_duration.clone(),
+                real_from: self.real_from.clone(),
+                real_duration: self.real_duration.clone(),
+            }
+        }
+    }
+
     #[derive(Debug, Serialize, Deserialize)]
     pub struct TaskManager {
         tasks: Vec<Task>,
@@ -118,6 +117,10 @@ pub mod task {
 
         pub fn get_tasks(&self) -> &Vec<Task> {
             &self.tasks
+        }
+
+        pub fn get_task_by_index(&self, index: usize) -> Option<&Task> {
+            self.tasks.get(index)
         }
 
         pub fn add_task(&mut self, task: Task) {
@@ -138,21 +141,27 @@ pub mod task {
             }
         }
 
-        pub fn list_task_by_id(&self, id: i32) -> Option<&Task> {
+        pub fn print_by_id(&self, id: i32) -> Option<&Task> {
             self.tasks.iter().find(|t| t.id == id)
         }
 
-        pub fn list_tasks(&self, show_header: bool) {
+        pub fn print(&self, show_header: bool) {
             if show_header {
                 Task::print_header();
             }
 
-            for i in self.tasks.iter() {
-                i.print();
-            }
+            println!("{}", self.format());
         }
 
-        pub fn list_all_tasks(&self) {}
+        pub fn format(&self) -> String {
+            let mut string = String::new();
+
+            for i in &self.tasks {
+                string = format!("{}\n{}", string, i);
+            }
+
+            string
+        }
 
         pub fn sort_by_planned_duration(&mut self) {
             self.tasks

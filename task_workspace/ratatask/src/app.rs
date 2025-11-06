@@ -1,15 +1,13 @@
-use std::{fmt::Display, path::PathBuf, task};
+use std::{fmt::Display, path::PathBuf};
 
 use crate::{
     event::{AppEvent, Event, EventHandler, TaskListEvent},
-    task_list::{self, TaskList},
+    task_list::TaskList,
 };
 use ratatui::{
     DefaultTerminal,
-    crossterm::event::{KeyCode, KeyEvent, KeyModifiers},
+    crossterm::event::{KeyCode, KeyEvent},
 };
-
-use task_library::{control::deserialize_json, task::TaskManager};
 
 #[derive(Debug)]
 pub enum FocusedWidget {
@@ -79,8 +77,11 @@ impl App {
                     AppEvent::Quit => self.quit(),
                     AppEvent::FocusNext => self.focus_next(),
                     AppEvent::FocusPrevious => self.focus_previous(),
-                    AppEvent::TaskList => self.handle_task_list_event(&mut self, task_list_event: TaskListEvent), 
+                    AppEvent::TaskList(task_list_event) => {
+                        self.handle_task_list_event(task_list_event)
+                    }
                 },
+                // AppEvent::TaskList => self.handle_task_list_event(&mut self, task_list_event),
             }
         }
         Ok(())
@@ -116,7 +117,9 @@ impl App {
         Ok(())
     }
 
-    pub fn tick(&self) {}
+    pub fn tick(&self) {
+        // do something every tick
+    }
 
     pub fn quit(&mut self) {
         self.running = false;
@@ -145,9 +148,9 @@ impl App {
     pub fn handle_task_list_event(&mut self, task_list_event: TaskListEvent) {
         match task_list_event {
             TaskListEvent::SelectNext => self.task_list.state.select_next(),
-            TaskListEvent::SelectPrevious =>self.task_list.state.select_previous(), 
-            TaskListEvent::Deselect =>self.task_list.state.select(None), 
-            TaskListEvent::ShowTaskDescription => todo!(),
+            TaskListEvent::SelectPrevious => self.task_list.state.select_previous(),
+            TaskListEvent::Deselect => self.task_list.state.select(None),
+            TaskListEvent::ShowTaskDescription => self.task_list.update_selected_task(), // TODO domaca uloha
         }
     }
-    }
+}

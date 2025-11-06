@@ -24,7 +24,7 @@ impl Widget for &mut App {
                 Constraint::Length(3),
                 Constraint::Min(0),
                 Constraint::Min(0),
-                Constraint::Length(9),
+                Constraint::Length(10),
             ])
             .areas(area);
 
@@ -74,15 +74,15 @@ impl App {
         let items: Vec<ListItem> = self
             .task_list
             .task_manager
-            .format_all_tasks()
+            .get_tasks()
             .into_iter()
-            .map(|t| ListItem::new(t))
+            .map(|t| ListItem::new(t.format()))
             .collect();
 
         let list = List::new(items)
             .block(block)
             .highlight_style(SELECTED_STYLE)
-            .highlight_symbol(">")
+            .highlight_symbol("> ")
             .highlight_spacing(ratatui::widgets::HighlightSpacing::Always);
 
         StatefulWidget::render(list, area, buf, &mut self.task_list.state);
@@ -101,7 +101,34 @@ impl App {
             block = block.border_style(Style::new().fg(ratatui::style::Color::Green));
         }
 
-        block.render(area, buf);
+        let lines: Vec<Line<'_>> = match self.task_list.rendered_task.as_ref() {
+            Some(t) => vec![
+                format!("Task #{} - {}", t.id, t.name).into(),
+                format!("  {}", t.description).into(),
+                format!("  Priority {}", t.priority).into(),
+                format!(
+                    "  From {} to {} (Planned)",
+                    t.planned_from,
+                    t.calculate_planned_end()
+                )
+                .into(),
+                format!(
+                    "  From {} to {} (Actual)",
+                    match t.real_from {
+                        Some(val) => val.to_string(),
+                        None => "-".to_string(),
+                    },
+                    match t.calculate_real_end() {
+                        Some(val) => val.to_string(),
+                        None => "-".to_string(),
+                    }
+                )
+                .into(),
+            ],
+            None => Vec::new(),
+        };
+
+        Paragraph::new(lines).block(block).render(area, buf);
     }
 
     fn render_gant(&self, area: Rect, buf: &mut Buffer) {
@@ -128,14 +155,11 @@ impl App {
         }
 
         let mut text: Vec<Line<'_>> = vec![
+            Line::from(format!("Current tab: {}", self.focused_widget.to_string()))
+                .style(Style::new().fg(Color::Green)),
             "Press q to exit".into(),
             "Press Tab to focus to next widget".into(),
             "Press Shift+Tab to focus to previous widget".into(),
-            format!(
-                "Currently focused widget: {}",
-                self.focused_widget.to_string()
-            )
-            .into(),
         ];
 
         match self.focused_widget {
@@ -152,7 +176,8 @@ impl App {
 }
 
 fn add_task_list_info(text: &mut Vec<Line<'_>>) {
-    text.push(Line::from("Select task using Up ↑ and Down ↓ arrows"));
-    text.push(Line::from("Press Esc to deselect all"));
-    text.push(Line::from("Press Enter to show description"));
+    text.push(Line::from("Special actions: ").style(Style::new().fg(Color::Green)));
+    text.push(Line::from("  Select task using Up ↑ and Down ↓ arrows"));
+    text.push(Line::from("  Press Esc to deselect all"));
+    text.push(Line::from("  Press Enter to show description"));
 }
