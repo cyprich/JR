@@ -1,116 +1,158 @@
 use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Constraint, Layout, Rect},
-    style::{Color, Style, Stylize},
-    widgets::{Block, BorderType, List, Paragraph, Row, Table, Widget},
+    style::{Color, Modifier, Style},
+    text::{Line, Text},
+    widgets::{Block, BorderType, List, ListItem, Paragraph, StatefulWidget, Widget},
 };
-use task_library::task::TaskManager;
 
-use crate::app::App;
+use crate::app::{App, FocusedWidget};
 
-impl Widget for &App {
-    /// Renders the user interface widgets.
-    ///
-    // This is where you add new widgets.
-    // See the following resources:
-    // - https://docs.rs/ratatui/latest/ratatui/widgets/index.html
-    // - https://github.com/ratatui/ratatui/tree/master/examples
+const SELECTED_STYLE: Style = Style::new()
+    .bg(Color::DarkGray)
+    .add_modifier(Modifier::BOLD);
+
+impl Widget for &mut App {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let block = Block::bordered()
-            .title_alignment(Alignment::Center)
-            .border_type(BorderType::Rounded);
+        // let block = Block::bordered()
+        //     .title_alignment(Alignment::Center)
+        //     .border_type(BorderType::Rounded);
 
-        let middle_layout = Layout::default()
-            .direction(ratatui::layout::Direction::Horizontal)
-            .constraints(vec![Constraint::Ratio(1, 4), Constraint::Ratio(3, 4)])
-            .split(area);
-
-        let side_layout = Layout::default()
+        let areas: [Rect; 4] = Layout::default()
             .direction(ratatui::layout::Direction::Vertical)
-            .constraints(vec![Constraint::Length(4), Constraint::Fill(1)])
-            .split(middle_layout[0]);
+            .constraints(vec![
+                Constraint::Length(3),
+                Constraint::Min(0),
+                Constraint::Min(0),
+                Constraint::Length(9),
+            ])
+            .areas(area);
 
-        let table_widget = get_tasks_table(&self.tm)
-            .block(block.clone().title("Tasks"))
-            .fg(Color::Cyan)
-            .bg(Color::Black);
+        let inner_area: [Rect; 2] = Layout::default()
+            .direction(ratatui::layout::Direction::Horizontal)
+            .constraints(vec![Constraint::Percentage(50), Constraint::Percentage(50)])
+            .areas(areas[1]);
 
-        let name_widget = Paragraph::new("Task Manager\nratatask")
-            .block(block.clone())
-            .fg(Color::Cyan)
-            .bg(Color::Black)
-            .centered();
-
-        let action_names = [
-            "Add task",
-            "Remove task",
-            "Sort by ID",
-            "Sort by Planned Date",
-            "Sort by Planned Duration",
-        ];
-        let actions_widget = List::new(action_names)
-            .block(block.clone().title("Actions"))
-            .fg(Color::Cyan)
-            .bg(Color::Black);
-
-        table_widget.render(middle_layout[1], buf);
-        name_widget.render(side_layout[0], buf);
-        actions_widget.render(side_layout[1], buf);
+        self.render_top_bar(areas[0], buf);
+        self.render_task_list(inner_area[0], buf);
+        self.render_task_description(inner_area[1], buf);
+        self.render_gant(areas[2], buf);
+        self.render_help(areas[3], buf);
     }
 }
 
-fn get_tasks_table(tm: &TaskManager) -> Table {
-    let t = Table::default().header(
-        Row::new(vec![
-            "ID",
-            "Name",
-            "Description",
-            "Priority",
-            "Planned date",
-            "Real date",
-        ])
-        .style(Style::new().bold().fg(Color::Black).bg(Color::Cyan)),
-    ); // TODO add other fields 
+impl App {
+    fn render_top_bar(&self, area: Rect, buf: &mut Buffer) {
+        let mut block = Block::bordered()
+            .title(FocusedWidget::TopBar.to_string())
+            .title_alignment(Alignment::Center)
+            .border_type(BorderType::Rounded);
 
-    let row_widths = [
-        Constraint::Length(5),
-        Constraint::Min(0),
-        Constraint::Min(0),
-        Constraint::Min(0),
-        Constraint::Min(0),
-        Constraint::Min(0),
-    ];
+        if matches!(self.focused_widget, crate::app::FocusedWidget::TopBar) {
+            block = block.border_style(Style::new().fg(ratatui::style::Color::Green));
+        }
 
-    let rows: Vec<Row> = tm
-        .get_tasks()
-        .iter()
-        .map(|task| {
-            Row::new(vec![
-                task.id.to_string(),
-                task.name.clone(),
-                task.description.clone(),
-                task.priority.to_string(),
-                format!(
-                    "{} to {}",
-                    task.planned_from.to_string(),
-                    task.calculate_planned_end().to_string(),
-                ),
-                format!(
-                    "{} to {}",
-                    // task.real_from.unwrap_or("-"),
-                    // task.calculate_real_end().unwrap_or("-")
-                    match task.real_from {
-                        Some(val) => val.to_string(),
-                        None => String::from("-"),
-                    },
-                    match task.calculate_real_end() {
-                        Some(val) => val.to_string(),
-                        None => String::from("-"),
-                    }
-                ),
-            ])
-        })
-        .collect();
+        Paragraph::new(format!(
+            "Currently using file: `{}`",
+            self.task_path.to_str().unwrap()
+        ))
+        .block(block)
+        .alignment(Alignment::Center)
+        .render(area, buf);
+    }
 
-    t.rows(rows).widths(row_widths)
+    fn render_task_list(&mut self, area: Rect, buf: &mut Buffer) {
+        let mut block = Block::bordered()
+            .title(FocusedWidget::TaskList.to_string())
+            .title_alignment(Alignment::Center)
+            .border_type(BorderType::Rounded);
+
+        if matches!(self.focused_widget, crate::app::FocusedWidget::TaskList) {
+            block = block.border_style(Style::new().fg(ratatui::style::Color::Green));
+        }
+
+        let items: Vec<ListItem> = self
+            .task_list
+            .task_manager
+            .format_all_tasks()
+            .into_iter()
+            .map(|t| ListItem::new(t))
+            .collect();
+
+        let list = List::new(items)
+            .block(block)
+            .highlight_style(SELECTED_STYLE)
+            .highlight_symbol(">")
+            .highlight_spacing(ratatui::widgets::HighlightSpacing::Always);
+
+        StatefulWidget::render(list, area, buf, &mut self.task_list.state);
+    }
+
+    fn render_task_description(&self, area: Rect, buf: &mut Buffer) {
+        let mut block = Block::bordered()
+            .title(FocusedWidget::TaskDescription.to_string())
+            .title_alignment(Alignment::Center)
+            .border_type(BorderType::Rounded);
+
+        if matches!(
+            self.focused_widget,
+            crate::app::FocusedWidget::TaskDescription
+        ) {
+            block = block.border_style(Style::new().fg(ratatui::style::Color::Green));
+        }
+
+        block.render(area, buf);
+    }
+
+    fn render_gant(&self, area: Rect, buf: &mut Buffer) {
+        let mut block = Block::bordered()
+            .title(FocusedWidget::Gant.to_string())
+            .title_alignment(Alignment::Center)
+            .border_type(BorderType::Rounded);
+
+        if matches!(self.focused_widget, crate::app::FocusedWidget::Gant) {
+            block = block.border_style(Style::new().fg(ratatui::style::Color::Green));
+        }
+
+        block.render(area, buf);
+    }
+
+    fn render_help(&self, area: Rect, buf: &mut Buffer) {
+        let mut block = Block::bordered()
+            .title(FocusedWidget::Help.to_string())
+            .title_alignment(Alignment::Center)
+            .border_type(BorderType::Rounded);
+
+        if matches!(self.focused_widget, crate::app::FocusedWidget::Help) {
+            block = block.border_style(Style::new().fg(ratatui::style::Color::Green));
+        }
+
+        let mut text: Vec<Line<'_>> = vec![
+            "Press q to exit".into(),
+            "Press Tab to focus to next widget".into(),
+            "Press Shift+Tab to focus to previous widget".into(),
+            format!(
+                "Currently focused widget: {}",
+                self.focused_widget.to_string()
+            )
+            .into(),
+        ];
+
+        match self.focused_widget {
+            FocusedWidget::TaskList => add_task_list_info(&mut text),
+            _ => (),
+        }
+
+        let lines = Text::from(text);
+
+        Paragraph::new(lines).block(block).render(area, buf);
+
+        // block.render(area, buf);
+    }
+}
+
+fn add_task_list_info(text: &mut Vec<Line<'_>>) {
+    text.push(Line::from("Select task using Up ↑ and Down ↓ arrows"));
+    text.push(Line::from("Press Esc to deselect all"));
+    text.push(Line::from("Press Enter to show description"));
 }

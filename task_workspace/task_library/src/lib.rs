@@ -1,8 +1,6 @@
 pub mod control;
 
 pub mod task {
-    // use std::ffi::os_str::Display;
-
     use chrono::{NaiveDate, TimeDelta};
     use serde::{Deserialize, Serialize};
 
@@ -153,6 +151,8 @@ pub mod task {
                 i.print();
             }
         }
+
+        pub fn list_all_tasks(&self) {}
 
         pub fn sort_by_planned_duration(&mut self) {
             self.tasks

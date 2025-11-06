@@ -1,6 +1,9 @@
-use std::path::PathBuf;
+use std::{fmt::Display, path::PathBuf, task};
 
-use crate::event::{AppEvent, Event, EventHandler};
+use crate::{
+    event::{AppEvent, Event, EventHandler, TaskListEvent},
+    task_list::{self, TaskList},
+};
 use ratatui::{
     DefaultTerminal,
     crossterm::event::{KeyCode, KeyEvent, KeyModifiers},
@@ -8,38 +11,58 @@ use ratatui::{
 
 use task_library::{control::deserialize_json, task::TaskManager};
 
-/// Application.
+#[derive(Debug)]
+pub enum FocusedWidget {
+    TopBar,
+    TaskList,
+    TaskDescription,
+    Gant,
+    Help,
+}
+
 #[derive(Debug)]
 pub struct App {
-    /// Is the application running?
     pub running: bool,
-    /// Event handler.
     pub events: EventHandler,
+    pub focused_widget: FocusedWidget,
+    pub task_list: TaskList,
+    pub task_path: PathBuf,
+}
 
-    pub tm: TaskManager,
+impl Display for FocusedWidget {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FocusedWidget::TopBar => write!(f, "Top Bar"),
+            FocusedWidget::TaskList => write!(f, "Task List"),
+            FocusedWidget::TaskDescription => write!(f, "Task Description"),
+            FocusedWidget::Gant => write!(f, "Gant"),
+            FocusedWidget::Help => write!(f, "Help"),
+        }
+    }
 }
 
 impl Default for App {
     fn default() -> Self {
+        let task_path = PathBuf::from("tasks.json");
         Self {
             running: true,
             events: EventHandler::new(),
-            tm: deserialize_json(&PathBuf::from("tasks.json")),
+            focused_widget: FocusedWidget::TopBar,
+            task_list: TaskList::new().open(&task_path),
+            task_path,
         }
     }
 }
 
 impl App {
-    /// Constructs a new instance of [`App`].
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Run the application's main loop.
     pub async fn run(mut self, mut terminal: DefaultTerminal) -> color_eyre::Result<()> {
         while self.running {
             terminal.draw(|frame| {
-                frame.render_widget(&self, frame.area());
+                frame.render_widget(&mut self, frame.area());
             })?;
 
             match self.events.next().await? {
@@ -54,40 +77,77 @@ impl App {
                 },
                 Event::App(app_event) => match app_event {
                     AppEvent::Quit => self.quit(),
-                    AppEvent::Add => self.add_task(),
-                    AppEvent::Delete => self.delete_task(),
+                    AppEvent::FocusNext => self.focus_next(),
+                    AppEvent::FocusPrevious => self.focus_previous(),
+                    AppEvent::TaskList => self.handle_task_list_event(&mut self, task_list_event: TaskListEvent), 
                 },
             }
         }
         Ok(())
     }
 
-    /// Handles the key events and updates the state of [`App`].
     pub fn handle_key_events(&mut self, key_event: KeyEvent) -> color_eyre::Result<()> {
         match key_event.code {
-            KeyCode::Esc | KeyCode::Char('q') => self.events.send(AppEvent::Quit),
-            KeyCode::Char('c' | 'C') if key_event.modifiers == KeyModifiers::CONTROL => {
-                self.events.send(AppEvent::Quit)
-            }
-            KeyCode::Char('a' | 'A') => self.events.send(AppEvent::Add),
-            KeyCode::Char('d' | 'D') => self.events.send(AppEvent::Delete),
+            KeyCode::Char('q') => self.events.send(AppEvent::Quit),
+            KeyCode::Tab => self.events.send(AppEvent::FocusNext),
+            KeyCode::BackTab => self.events.send(AppEvent::FocusPrevious),
+
             _ => {}
+        }
+
+        match self.focused_widget {
+            FocusedWidget::TaskList => match key_event.code {
+                KeyCode::Esc => self
+                    .events
+                    .send(AppEvent::TaskList(crate::event::TaskListEvent::Deselect)),
+                KeyCode::Enter => self.events.send(AppEvent::TaskList(
+                    crate::event::TaskListEvent::ShowTaskDescription,
+                )),
+                KeyCode::Up => self.events.send(AppEvent::TaskList(
+                    crate::event::TaskListEvent::SelectPrevious,
+                )),
+                KeyCode::Down => self
+                    .events
+                    .send(AppEvent::TaskList(crate::event::TaskListEvent::SelectNext)),
+                _ => (),
+            },
+            _ => (),
         }
         Ok(())
     }
 
-    /// Handles the tick event of the terminal.
-    ///
-    /// The tick event is where you can update the state of your application with any logic that
-    /// needs to be updated at a fixed frame rate. E.g. polling a server, updating an animation.
     pub fn tick(&self) {}
 
-    /// Set running to false to quit the application.
     pub fn quit(&mut self) {
         self.running = false;
     }
 
-    pub fn add_task(&self) {}
+    pub fn focus_next(&mut self) {
+        self.focused_widget = match self.focused_widget {
+            FocusedWidget::TopBar => FocusedWidget::TaskList,
+            FocusedWidget::TaskList => FocusedWidget::TaskDescription,
+            FocusedWidget::TaskDescription => FocusedWidget::Gant,
+            FocusedWidget::Gant => FocusedWidget::Help,
+            FocusedWidget::Help => FocusedWidget::TopBar,
+        }
+    }
 
-    pub fn delete_task(&self) {}
-}
+    pub fn focus_previous(&mut self) {
+        self.focused_widget = match self.focused_widget {
+            FocusedWidget::TopBar => FocusedWidget::Help,
+            FocusedWidget::TaskList => FocusedWidget::TopBar,
+            FocusedWidget::TaskDescription => FocusedWidget::TaskList,
+            FocusedWidget::Gant => FocusedWidget::TaskDescription,
+            FocusedWidget::Help => FocusedWidget::Gant,
+        }
+    }
+
+    pub fn handle_task_list_event(&mut self, task_list_event: TaskListEvent) {
+        match task_list_event {
+            TaskListEvent::SelectNext => self.task_list.state.select_next(),
+            TaskListEvent::SelectPrevious =>self.task_list.state.select_previous(), 
+            TaskListEvent::Deselect =>self.task_list.state.select(None), 
+            TaskListEvent::ShowTaskDescription => todo!(),
+        }
+    }
+    }

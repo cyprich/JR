@@ -2,6 +2,7 @@ use crate::app::App;
 
 pub mod app;
 pub mod event;
+pub mod task_list;
 pub mod ui;
 
 #[tokio::main]
