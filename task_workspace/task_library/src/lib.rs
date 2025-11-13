@@ -93,14 +93,14 @@ pub mod task {
     impl Clone for Task {
         fn clone(&self) -> Self {
             Self {
-                id: self.id.clone(),
+                id: self.id,
                 name: self.name.clone(),
                 description: self.description.clone(),
-                priority: self.priority.clone(),
-                planned_from: self.planned_from.clone(),
-                planned_duration: self.planned_duration.clone(),
-                real_from: self.real_from.clone(),
-                real_duration: self.real_duration.clone(),
+                priority: self.priority,
+                planned_from: self.planned_from,
+                planned_duration: self.planned_duration,
+                real_from: self.real_from,
+                real_duration: self.real_duration,
             }
         }
     }
@@ -175,6 +175,12 @@ pub mod task {
 
         pub fn sort_by_priority(&mut self) {
             self.tasks.sort_by(|a, b| a.priority.cmp(&b.priority));
+        }
+    }
+
+    impl Default for TaskManager {
+        fn default() -> Self {
+            Self::new()
         }
     }
 }

@@ -3,7 +3,10 @@ use ratatui::{
     layout::{Alignment, Constraint, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Text},
-    widgets::{Block, BorderType, List, ListItem, Paragraph, StatefulWidget, Widget},
+    widgets::{
+        Block, BorderType, List, ListItem, Paragraph, StatefulWidget, Widget,
+        canvas::{Canvas, Rectangle},
+    },
 };
 
 use crate::app::{App, FocusedWidget};
@@ -140,8 +143,22 @@ impl App {
         if matches!(self.focused_widget, crate::app::FocusedWidget::Gant) {
             block = block.border_style(Style::new().fg(ratatui::style::Color::Green));
         }
+        let tasks = self.task_list.task_manager.get_tasks();
 
-        block.render(area, buf);
+        let canvas = Canvas::default()
+            .block(block)
+            // .x_bounds([0.0, number_of_days])
+            .x_bounds([0.0, 10.0])
+            .y_bounds([0.0, tasks.len() as f64])
+            .marker(ratatui::symbols::Marker::Block)
+            .paint(|ctx| {
+                for (i, task) in tasks.iter().enumerate() {
+                    let y = (tasks.len() - i) as f64;
+                    ctx.print(0.0, y, format!("#{}", i));
+                }
+            });
+
+        canvas.render(area, buf);
     }
 
     fn render_help(&self, area: Rect, buf: &mut Buffer) {
@@ -155,16 +172,15 @@ impl App {
         }
 
         let mut text: Vec<Line<'_>> = vec![
-            Line::from(format!("Current tab: {}", self.focused_widget.to_string()))
+            Line::from(format!("Current tab: {}", self.focused_widget))
                 .style(Style::new().fg(Color::Green)),
             "Press q to exit".into(),
             "Press Tab to focus to next widget".into(),
             "Press Shift+Tab to focus to previous widget".into(),
         ];
 
-        match self.focused_widget {
-            FocusedWidget::TaskList => add_task_list_info(&mut text),
-            _ => (),
+        if matches!(self.focused_widget, FocusedWidget::TaskList) {
+            add_task_list_info(&mut text);
         }
 
         let lines = Text::from(text);
