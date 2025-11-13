@@ -78,7 +78,7 @@ impl App {
             .task_list
             .task_manager
             .get_tasks()
-            .into_iter()
+            .iter()
             .map(|t| ListItem::new(t.format()))
             .collect();
 

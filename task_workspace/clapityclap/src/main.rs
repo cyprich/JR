@@ -2,7 +2,7 @@ use clap::Parser;
 use std::path::PathBuf;
 
 use task_library::{
-    control::{self, add, deserialize_json, list, remove_by_id, serialize_json},
+    control::{self, add, deserialize_json, list, serialize_json},
     task::{ReadTask, TaskManager},
 };
 mod config;

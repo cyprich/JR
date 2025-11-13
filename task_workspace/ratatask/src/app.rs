@@ -96,8 +96,8 @@ impl App {
             _ => {}
         }
 
-        match self.focused_widget {
-            FocusedWidget::TaskList => match key_event.code {
+        if matches!(self.focused_widget, FocusedWidget::TaskList) {
+            match key_event.code {
                 KeyCode::Esc => self
                     .events
                     .send(AppEvent::TaskList(crate::event::TaskListEvent::Deselect)),
@@ -111,8 +111,7 @@ impl App {
                     .events
                     .send(AppEvent::TaskList(crate::event::TaskListEvent::SelectNext)),
                 _ => (),
-            },
-            _ => (),
+            }
         }
         Ok(())
     }
