@@ -109,18 +109,22 @@ impl App {
                 format!("Task #{} - {}", t.id, t.name).into(),
                 format!("  {}", t.description).into(),
                 format!("  Priority {}", t.priority).into(),
+                "".into(),
+                "  Planned date:".into(),
+                format!("    From: {}", t.planned_from).into(),
+                format!("    To:   {}", t.calculate_planned_end()).into(),
+                "".into(),
+                "  Real date:".into(),
                 format!(
-                    "  From {} to {} (Planned)",
-                    t.planned_from,
-                    t.calculate_planned_end()
-                )
-                .into(),
-                format!(
-                    "  From {} to {} (Actual)",
+                    "    From: {}",
                     match t.real_from {
                         Some(val) => val.to_string(),
                         None => "-".to_string(),
                     },
+                )
+                .into(),
+                format!(
+                    "    To:   {}",
                     match t.calculate_real_end() {
                         Some(val) => val.to_string(),
                         None => "-".to_string(),
