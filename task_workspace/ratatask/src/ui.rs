@@ -143,18 +143,39 @@ impl App {
         if matches!(self.focused_widget, crate::app::FocusedWidget::Gant) {
             block = block.border_style(Style::new().fg(ratatui::style::Color::Green));
         }
+
         let tasks = self.task_list.task_manager.get_tasks();
+        let min_date = tasks.iter().map(|t| t.planned_from).min().unwrap();
+        let max_date = tasks
+            .iter()
+            .map(|t| t.calculate_planned_end())
+            .max()
+            .unwrap();
+        let total_days = max_date - min_date;
 
         let canvas = Canvas::default()
             .block(block)
             // .x_bounds([0.0, number_of_days])
-            .x_bounds([0.0, 10.0])
+            .x_bounds([0.0, total_days.num_days() as f64])
             .y_bounds([0.0, tasks.len() as f64])
+            // .background_color(Color::White)
             .marker(ratatui::symbols::Marker::Block)
             .paint(|ctx| {
                 for (i, task) in tasks.iter().enumerate() {
+                    let x = (task.planned_from - min_date).num_days() as f64;
                     let y = (tasks.len() - i) as f64;
-                    ctx.print(0.0, y, format!("#{}", i));
+                    let width = task.planned_duration.num_days() as f64;
+                    let height = 0.0;
+                    let color = Color::Blue;
+
+                    ctx.draw(&Rectangle {
+                        x,
+                        y,
+                        width,
+                        height,
+                        color,
+                    });
+                    ctx.print(0.0, y, format!("#{}", task.id));
                 }
             });
 
