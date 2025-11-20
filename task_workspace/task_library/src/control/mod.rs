@@ -2,6 +2,8 @@ use std::{fs::File, path::PathBuf};
 
 use crate::task::{ReadTask, Task, TaskManager};
 
+pub mod db;
+
 pub fn deserialize_json(path: &PathBuf) -> TaskManager {
     let tm: TaskManager;
 
@@ -48,7 +50,6 @@ pub fn list_by_id(tm: &TaskManager, id: i32, show_header: bool) {
     }
 }
 
-// pub fn add(path: &PathBuf, reader: impl ReadFromUser) {
 pub fn add(tm: &mut TaskManager, reader: &impl ReadTask) {
     let task = Task {
         id: reader.read_id("ID of Task: "),
