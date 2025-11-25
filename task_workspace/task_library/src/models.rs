@@ -17,8 +17,8 @@ pub struct TaskDb {
     pub real_duration: Option<i32>,
 }
 
-impl From<&Task> for TaskDb {
-    fn from(value: &Task) -> Self {
+impl From<Task> for TaskDb {
+    fn from(value: Task) -> Self {
         TaskDb {
             id: value.id,
             name: value.name.clone(),
@@ -27,8 +27,8 @@ impl From<&Task> for TaskDb {
             planned_from: value.planned_from.format("%Y%m%d").to_string(),
             planned_duration: value.planned_duration.num_days().try_into().unwrap(),
             real_from: match value.real_from {
-                Some(_) => todo!(),
-                None => todo!(),
+                Some(val) => Some(val.format("%Y%m%d").to_string()),
+                None => None,
             },
             real_duration: match value.real_duration {
                 Some(v) => Some(v.num_days().try_into().unwrap()),
@@ -42,8 +42,14 @@ impl From<&TaskDb> for Task {
     fn from(value: &TaskDb) -> Self {
         let s = value.planned_from.clone();
         let planned_from = NaiveDate::parse_from_str(s.as_str(), "%Y%m%d").unwrap();
-        let s = value.real_from.clone().unwrap();
-        let real_from = Some(NaiveDate::parse_from_str(s.as_str(), "%Y%m%d").unwrap());
+
+        // let s = value.real_from.clone().unwrap_or("".to_string());
+        // let real_from = Some(NaiveDate::parse_from_str(s.as_str(), "%Y%m%d").unwrap());
+
+        let real_from = match &value.real_from {
+            Some(val) => Some(NaiveDate::parse_from_str(val.as_str(), "%Y%m%d").unwrap()),
+            None => None,
+        };
 
         Task {
             id: value.id,
@@ -53,10 +59,9 @@ impl From<&TaskDb> for Task {
             planned_from,
             planned_duration: TimeDelta::days(value.planned_duration as i64),
             real_from,
-
             real_duration: match value.real_duration {
                 Some(v) => Some(TimeDelta::days(v as i64)),
-                None => todo!(),
+                None => None,
             },
         }
     }

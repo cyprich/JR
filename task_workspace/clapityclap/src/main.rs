@@ -2,7 +2,7 @@ use clap::Parser;
 use std::path::PathBuf;
 
 use task_library::{
-    control::{self, add, deserialize_json, list, serialize_json},
+    control::{self, add, db::create_from_db, deserialize_json, list, serialize_json},
     task::{ReadTask, TaskManager},
 };
 mod config;
@@ -30,24 +30,21 @@ fn main() {
     };
 
     let path = args.path.unwrap();
-    let mut task_manager = deserialize_json(&path);
+    // let mut task_manager = deserialize_json(&path);
+    // let mut task_manager = create_from_db();
 
     match args.command {
-        config::Commands::List => control::list(&task_manager, args.show_header),
-        config::Commands::ListById { id } => {
-            control::list_by_id(&task_manager, id, args.show_header)
-        }
-        config::Commands::Add => control::add(&mut task_manager, &ConsoleReader),
-        config::Commands::RemoveById { id } => control::remove_by_id(&mut task_manager, id),
-        config::Commands::Interactive => {
-            interactive(&mut task_manager, args.show_header, &ConsoleReader)
-        }
+        config::Commands::List => control::db::list(args.show_header),
+        config::Commands::ListById { id } => control::db::list_by_id(id, args.show_header),
+        config::Commands::Add => control::db::add(&ConsoleReader),
+        config::Commands::RemoveById { id } => control::db::remove_by_id(id),
+        config::Commands::Interactive => interactive(args.show_header, &ConsoleReader),
     };
 
-    serialize_json(&path, &task_manager);
+    // serialize_json(&path, &task_manager);
 }
 
-fn interactive(tm: &mut TaskManager, show_header: bool, reader: &impl ReadTask) {
+fn interactive(show_header: bool, reader: &impl ReadTask) {
     println!("Launching in interactive mode... Press ctrl+c to quit\n");
 
     loop {
@@ -56,8 +53,8 @@ fn interactive(tm: &mut TaskManager, show_header: bool, reader: &impl ReadTask) 
 
         match string {
             "quit" => break,
-            "list" => list(tm, show_header),
-            "add" => add(tm, reader),
+            "list" => control::db::list(show_header),
+            "add" => control::db::add(reader),
             // "remove" => remove_by_id(tm, id), // TODO
             _ => println!("Unknown command... available commands are: list, add, quit"),
         }

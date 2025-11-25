@@ -50,8 +50,8 @@ pub fn list_by_id(tm: &TaskManager, id: i32, show_header: bool) {
     }
 }
 
-pub fn add(tm: &mut TaskManager, reader: &impl ReadTask) {
-    let task = Task {
+pub fn create_task(reader: &impl ReadTask) -> Task {
+    Task {
         id: reader.read_id("ID of Task: "),
         name: reader.read_name("Name of Task: "),
         description: reader.read_description("Description of Task: "),
@@ -60,9 +60,11 @@ pub fn add(tm: &mut TaskManager, reader: &impl ReadTask) {
         planned_duration: reader.read_planned_duration("Planned duration (whole days): "),
         real_from: reader.read_real_from("Real date from (ex. 1.1.2025) (optional): "),
         real_duration: reader.read_real_duration("Real duration (whole days) (optional): "),
-    };
+    }
+}
 
-    tm.add_task(task);
+pub fn add(tm: &mut TaskManager, reader: &impl ReadTask) {
+    tm.add_task(create_task(reader));
 }
 
 pub fn remove_by_id(tm: &mut TaskManager, id: i32) {
