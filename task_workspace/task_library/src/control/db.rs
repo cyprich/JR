@@ -1,11 +1,9 @@
 use diesel::associations::HasTable;
-use diesel::deserialize::Result;
 use diesel::prelude::*;
 
 use crate::control::create_task;
 use crate::schema::tasks::dsl::tasks;
 use crate::schema::tasks::id;
-use crate::schema::tasks::name;
 use crate::task::ReadTask;
 use crate::task::Task;
 use crate::{db::establish_connection, models::TaskDb, task::TaskManager};

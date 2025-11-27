@@ -2,8 +2,8 @@ use clap::Parser;
 use std::path::PathBuf;
 
 use task_library::{
-    control::{self, add, db::create_from_db, deserialize_json, list, serialize_json},
-    task::{ReadTask, TaskManager},
+    control::{self},
+    task::ReadTask,
 };
 mod config;
 use config::Config;
@@ -29,7 +29,7 @@ fn main() {
         }
     };
 
-    let path = args.path.unwrap();
+    // let path = args.path.unwrap();
     // let mut task_manager = deserialize_json(&path);
     // let mut task_manager = create_from_db();
 
