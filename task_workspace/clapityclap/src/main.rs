@@ -34,8 +34,8 @@ fn main() {
     // let mut task_manager = create_from_db();
 
     match args.command {
-        config::Commands::List => control::db::list(args.show_header),
-        config::Commands::ListById { id } => control::db::list_by_id(id, args.show_header),
+        config::Commands::List => control::db::print(args.show_header),
+        config::Commands::ListById { id } => control::db::print_by_id(id, args.show_header),
         config::Commands::Add => control::db::add(&ConsoleReader),
         config::Commands::RemoveById { id } => control::db::remove_by_id(id),
         config::Commands::Interactive => interactive(args.show_header, &ConsoleReader),
@@ -53,7 +53,7 @@ fn interactive(show_header: bool, reader: &impl ReadTask) {
 
         match string {
             "quit" => break,
-            "list" => control::db::list(show_header),
+            "list" => control::db::print(show_header),
             "add" => control::db::add(reader),
             // "remove" => remove_by_id(tm, id), // TODO
             _ => println!("Unknown command... available commands are: list, add, quit"),

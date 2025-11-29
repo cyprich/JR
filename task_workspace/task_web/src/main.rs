@@ -1,14 +1,16 @@
-use std::sync::Mutex;
-
-use actix_web::{App, HttpResponse, HttpServer, Responder, ResponseError, get, put, web};
+use actix_web::{App, HttpResponse, HttpServer, Responder, delete, get, put, web};
+use chrono::{NaiveDate, TimeDelta};
 use serde::{Deserialize, Serialize};
-use task_library::task::TaskManager;
-use utoipa::{OpenApi, openapi};
+use task_library::{
+    control::{self},
+    task::Task,
+};
+use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 #[derive(OpenApi)]
 #[openapi(
-    paths(hello, get_tasks, get_task_by_id, add_task),
+    paths(hello, get_tasks, get_task_by_id, add_task, delete_task_by_id),
     components(schemas(SimpleResponse))
 )]
 struct ApiDoc;
@@ -16,10 +18,6 @@ struct ApiDoc;
 #[derive(serde::Serialize, utoipa::ToSchema)]
 struct SimpleResponse {
     status: u16,
-}
-
-struct AppState {
-    task_manager: TaskManager,
 }
 
 #[utoipa::path(
@@ -34,45 +32,65 @@ async fn hello() -> impl Responder {
 
 #[utoipa::path]
 #[get("/get_tasks")]
-async fn get_tasks(state: web::Data<Mutex<AppState>>) -> impl Responder {
-    let s = state.lock().unwrap();
-    let tasks = s.task_manager.get_tasks();
+async fn get_tasks() -> impl Responder {
+    let tasks = control::db::list();
     HttpResponse::Ok().json(tasks)
 }
 
 #[utoipa::path]
 #[get("/get_task_by_id/{task_id}")]
-async fn get_task_by_id(state: web::Data<Mutex<AppState>>, path: web::Path<i32>) -> impl Responder {
+async fn get_task_by_id(path: web::Path<i32>) -> impl Responder {
     let task_id = path.into_inner();
-    HttpResponse::Ok().json(format!("{{task_id: {task_id}}}"))
+    let tasks = control::db::list_by_id(task_id);
+    HttpResponse::Ok().json(tasks)
 }
 
-#[derive(Deserialize, Serialize, utoipa::ToSchema)]
+#[derive(Deserialize, Serialize, utoipa::ToSchema, Debug)]
 struct AddTaskData {
     id: i32,
     name: String,
-    Description: String,
+    description: String,
+    priority: i32,
+    planned_from: NaiveDate,
+    planned_duration: i32,
+    real_from: Option<NaiveDate>,
+    real_duration: Option<i32>,
 }
 
 #[utoipa::path]
 #[put("/add_task")]
-async fn add_task(
-    state: web::Data<Mutex<AppState>>,
-    data: web::Json<AddTaskData>,
-) -> impl Responder {
+async fn add_task(data: web::Json<AddTaskData>) -> impl Responder {
+    let t = Task {
+        id: data.id,
+        name: data.name.clone(),
+        description: data.description.clone(),
+        priority: data.priority,
+        planned_from: data.planned_from,
+        planned_duration: TimeDelta::days(data.planned_duration.into()),
+        real_from: None,     // TODO
+        real_duration: None, // TODO
+    };
+
+    control::db::add_task(t);
+
     HttpResponse::Ok().json(data)
+}
+
+#[utoipa::path]
+#[delete("/delete_task_by_id/{task_id}")]
+async fn delete_task_by_id(path: web::Path<i32>) -> impl Responder {
+    let task_id = path.into_inner();
+    let t = control::db::list_by_id(task_id);
+    control::db::remove_by_id(task_id);
+    HttpResponse::Ok().json(t)
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let openapi = ApiDoc::openapi();
-    let app_state = web::Data::new(Mutex::new(AppState {
-        task_manager: TaskManager::new(),
-    }));
 
     HttpServer::new(move || {
         App::new()
-            .app_data(app_state.clone())
             .service(
                 SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", openapi.clone()),
             )
@@ -80,6 +98,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_tasks)
             .service(get_task_by_id)
             .service(add_task)
+            .service(delete_task_by_id)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

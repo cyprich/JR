@@ -23,38 +23,49 @@ pub fn create_from_db() -> TaskManager {
 
     tm
 }
-pub fn list(show_header: bool) {
+pub fn list() -> Vec<Task> {
     let conn = &mut establish_connection();
-    let task = tasks.load::<TaskDb>(conn);
+    let resp = tasks.load::<TaskDb>(conn);
 
-    if show_header {
-        Task::print_header();
-    }
-
-    match task {
-        Ok(val) => val.iter().for_each(|t| {
-            let t: Task = t.into();
-            println!("{}", t)
-        }),
-        Err(val) => println!("Error: {}", val),
+    match resp {
+        Ok(val) => val.iter().map(|t| t.into()).collect(),
+        Err(val) => {
+            println!("Error {val}");
+            Vec::new()
+        }
     }
 }
 
-pub fn list_by_id(task_id: i32, show_header: bool) {
+pub fn list_by_id(task_id: i32) -> Vec<Task> {
     let conn = &mut establish_connection();
-    let task = tasks.filter(id.eq(task_id)).load::<TaskDb>(conn);
+    let resp = tasks.filter(id.eq(task_id)).load::<TaskDb>(conn);
 
+    match resp {
+        Ok(val) => val.iter().map(|t| t.into()).collect(),
+        Err(val) => {
+            println!("Error: {}", val);
+            Vec::new()
+        }
+    }
+}
+
+pub fn print(show_header: bool) {
     if show_header {
         Task::print_header();
     }
 
-    match task {
-        Ok(val) => val.iter().for_each(|t| {
-            let t: Task = t.into();
-            println!("{}", t);
-        }),
-        Err(val) => println!("Error: {}", val),
+    let resp = list();
+
+    resp.iter().for_each(|t| println!("{}", t));
+}
+
+pub fn print_by_id(task_id: i32, show_header: bool) {
+    if show_header {
+        Task::print_header();
     }
+
+    let resp = list_by_id(task_id);
+    resp.iter().for_each(|t| println!("{}", t));
 }
 
 pub fn add(reader: &impl ReadTask) {
@@ -65,6 +76,19 @@ pub fn add(reader: &impl ReadTask) {
         .values(task_db)
         .execute(conn)
         .expect("Error adding tasks to db");
+}
+
+pub fn add_task(task: Task) {
+    let t: TaskDb = task.into();
+    add_task_db(t);
+}
+
+pub fn add_task_db(task_db: TaskDb) {
+    let conn = &mut establish_connection();
+    diesel::insert_into(tasks::table())
+        .values(task_db)
+        .execute(conn)
+        .expect("Error adding to db");
 }
 
 pub fn remove_by_id(task_id: i32) {
